@@ -1,0 +1,62 @@
+name: Oppdater værdata
+
+on:
+  schedule:
+    - cron: "7 * * * *"   # hver time, 7 minutter over (UTC)
+  workflow_dispatch:       # knapp for å kjøre manuelt under «Actions»
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  oppdater:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Hent forrige data (reserve hvis en kilde svikter)
+        run: curl -fsSL "${{ steps.pages.outputs.base_url }}/data.json" -o site/data.json || true
+
+      - name: Hent nye data
+        env:
+          OUT: site/data.json
+          CONTACT: ${{ github.server_url }}/${{ github.repository }}
+        run: python fetch_data.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      # GitHub stopper planlagte kjøringer i repoer uten aktivitet på 60 dager.
+      # En liten commit hver mandag holder kjøringen i live.
+      - name: Hold arbeidsflyten aktiv
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "$(date -u +%u%H)" = "106" ]; then
+            date -u +%Y-%m-%dT%H:%MZ > keepalive.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add keepalive.txt
+            git commit -m "Hold planlagt oppdatering aktiv" && git push
+          fi
