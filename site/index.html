@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Værvarsel Træna</title>
+<meta name="description" content="Vær, flo og fjære, stormflo, bølger og nordlys for Træna.">
+<meta name="theme-color" content="#0d6672">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 20c4-4 8-4 12 0s8 4 12 0 4-2 4-2v12H2Z' fill='%230d6672'/%3E%3Ccircle cx='22' cy='9' r='5' fill='%23e0a21b'/%3E%3C/svg%3E">
+<style>body{margin:0}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one instrument column for the island — weather now and seven days first, then tide (flo og fjære) with storm surge, then waves, then aurora visibility, then the reference levels. */
+:root{
+  --bg:#edf1f3; --panel:#ffffff; --fg:#122630; --muted:#5b6d76; --rule:#cfd9de;
+  --accent:#0d6672; --tide:#8aa3ae; --gust:#7c5aa6;
+  --sun:#e0a21b; --moon:#8a9aa6; --cloud:#b5c3ca; --cloud-dk:#8797a0; --rain:#2f7fbf; --snow:#7fa6c4; --bolt:#e0a21b;
+  --aurora:#1f9a76; --night:#dfe6ea; --kp:#1f9a76;
+  --ok:#2f7d4f; --ok-bg:#e1f0e6; --warn:#a66a00; --warn-bg:#fbefd6;
+  --high:#c2410c; --high-bg:#fde4d6; --crit:#a3122a; --crit-bg:#f9dbe0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c171d; --panel:#13232b; --fg:#e3ecef; --muted:#93a6ae; --rule:#24363f;
+  --accent:#4cc3cf; --tide:#5d7681; --gust:#b79be0;
+  --sun:#f2bf45; --moon:#c3ced6; --cloud:#5d717b; --cloud-dk:#7d929c; --rain:#5fb0ee; --snow:#a9cbe6; --bolt:#f2bf45;
+  --aurora:#5fe0b0; --night:#0a1419; --kp:#5fe0b0;
+  --ok:#5fc489; --ok-bg:#16301f; --warn:#f0b443; --warn-bg:#33270c;
+  --high:#ff8a4c; --high-bg:#3a1d0f; --crit:#ff6b80; --crit-bg:#3d1219; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c171d; --panel:#13232b; --fg:#e3ecef; --muted:#93a6ae; --rule:#24363f;
+  --accent:#4cc3cf; --tide:#5d7681; --gust:#b79be0;
+  --sun:#f2bf45; --moon:#c3ced6; --cloud:#5d717b; --cloud-dk:#7d929c; --rain:#5fb0ee; --snow:#a9cbe6; --bolt:#f2bf45;
+  --aurora:#5fe0b0; --night:#0a1419; --kp:#5fe0b0;
+  --ok:#5fc489; --ok-bg:#16301f; --warn:#f0b443; --warn-bg:#33270c;
+  --high:#ff8a4c; --high-bg:#3a1d0f; --crit:#ff6b80; --crit-bg:#3d1219; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+h1{font-family:var(--display);font-weight:700;font-size:2.4rem;letter-spacing:.01em;margin:0;line-height:1;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:1.35rem;letter-spacing:.02em;margin:0;text-transform:uppercase}
+h3{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:.04em;margin:0;text-transform:uppercase;color:var(--muted)}
+.meta{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.banner{border-radius:6px;padding:12px 16px;border-left:6px solid var(--c);background:var(--cbg);display:flex;flex-direction:column;gap:4px}
+.banner p{margin:0}
+.s0{--c:var(--ok);--cbg:var(--ok-bg)} .s1{--c:var(--warn);--cbg:var(--warn-bg)}
+.s2{--c:var(--high);--cbg:var(--high-bg)} .s3,.s4{--c:var(--crit);--cbg:var(--crit-bg)}
+.lead{font-size:1.02rem;margin:0}
+.chart{width:100%;overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:560px;height:auto;touch-action:pan-y;cursor:crosshair}
+svg text{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--accent);vertical-align:middle;margin-right:6px}
+.legend i.d{border-top:2px dashed var(--tide)} .legend i.o{width:8px;height:8px;border:0;border-radius:50%;background:var(--fg)}
+.legend i.g{height:8px;border:0;background:var(--gust);opacity:.35}
+.legend i.k{width:8px;height:10px;border:0;background:var(--kp)} .legend i.c{height:8px;border:0;background:var(--cloud)} .legend i.n{height:10px;border:1px solid var(--rule);background:var(--night)}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right} td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.day td{font-family:var(--display);font-weight:600;font-size:1rem;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);padding-top:14px}
+.kind{font-weight:600} .kind.lo{color:var(--muted);font-weight:400}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.78rem;font-weight:600;color:var(--c);background:var(--cbg);white-space:nowrap}
+.levels{display:grid;grid-template-columns:auto 1fr auto;gap:6px 14px;align-items:baseline;font-size:.92rem}
+.levels .v{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.levels .k{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.note{font-size:.85rem;color:var(--muted);margin:0}
+.note a,.lnk{color:var(--accent)}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.cur line{stroke:var(--fg);stroke-width:1.2}
+.cur circle{fill:var(--panel);stroke:var(--accent);stroke-width:2.5}
+.cur circle.tdot{stroke:var(--tide);stroke-width:2}
+.cur circle.gdot{stroke:var(--gust);stroke-width:2}
+.cur rect{fill:var(--fg)}
+.cur text{fill:var(--panel);font-weight:600;font-size:10.5px}
+.readout{border:1px solid var(--rule);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.rt{font-family:var(--display);font-weight:600;font-size:1.25rem;letter-spacing:.02em}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 16px}
+.rgrid div{display:flex;flex-direction:column;min-width:0}
+.rl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.rv{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600}
+#tslider,#aslider{width:100%;accent-color:var(--accent);height:32px;margin:0}
+#aslider{accent-color:var(--aurora)}
+#tslider:focus-visible,#aslider:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* weather now */
+.now{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:center}
+.now .ico{width:84px;height:84px}
+.now .temp{font-family:var(--display);font-weight:700;font-size:3.4rem;line-height:1}
+.now .desc{font-size:1.05rem}
+.wx{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 16px}
+.wx div{display:flex;flex-direction:column;min-width:0}
+.wx .rv{font-size:1.1rem}
+/* seven days */
+.days{display:flex;flex-direction:column}
+.dayrow{display:grid;grid-template-columns:minmax(64px,1.1fr) 40px minmax(84px,1fr) minmax(64px,.8fr) minmax(96px,1.1fr);align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.dayrow:last-child{border-bottom:0}
+.dayrow .dn{font-family:var(--display);font-weight:600;font-size:1.1rem;letter-spacing:.02em}
+.dayrow .dn small{display:block;font-family:var(--body);font-weight:400;font-size:.78rem;color:var(--muted);letter-spacing:0}
+.dayrow svg.ico{width:36px;height:36px}
+.dayrow .t{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600}
+.dayrow .t .lo{color:var(--muted);font-weight:400}
+.dayrow .pr{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--rain);font-size:.92rem}
+.dayrow .pr.zero{color:var(--muted)}
+.dayrow .w{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.92rem;display:flex;align-items:center;gap:6px}
+.dayrow .w svg{width:14px;height:14px;flex:none}
+.dayhead{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;border-bottom:1px solid var(--rule)}
+/* aurora */
+.nights{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+.night dd{white-space:nowrap}
+.dayrow .t{white-space:nowrap}
+.night{border-radius:6px;padding:12px 14px;border:1px solid var(--rule);border-top:5px solid var(--c);display:flex;flex-direction:column;gap:6px;min-width:0}
+.night .nd{font-family:var(--display);font-weight:600;font-size:1.1rem;letter-spacing:.02em}
+.night .verdict{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.1;color:var(--c)}
+.night dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:.88rem}
+.night dt{color:var(--muted)} .night dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.a0{--c:var(--cloud-dk)} .a1{--c:var(--warn)} .a2{--c:var(--aurora)} .a3{--c:var(--aurora)}
+@media (max-width:480px){
+  .dayrow{grid-template-columns:minmax(52px,1fr) 34px minmax(72px,1fr) minmax(86px,1.2fr);}
+  .dayrow .pr,.dayrow .gust{display:none}
+  .dayrow svg.ico{width:30px;height:30px}
+  .now .ico{width:64px;height:64px} .now .temp{font-size:2.8rem}
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Værvarsel Træna</h1>
+    <div class="meta" id="meta">Venter på data …</div>
+  </header>
+
+  <div id="app"><div class="panel empty">Henter siste varsel for vær, flo og fjære, bølger og nordlys. Siden oppdateres hver time.</div></div>
+
+  <p class="note">Kilder: vær fra MET sitt punktvarsel for Træna (samme som på yr.no), varsler og ikke målinger. Vannstand og stormflo fra <a href="https://www.kartverket.no/til-sjos/se-havniva" target="_blank" rel="noopener">Kartverket (Se havnivå)</a> i samarbeid med MET. Bølger fra MET oceanforecast for et punkt like vest for Træna (åpent hav, så bølgene inne mellom holmene blir lavere). Nordlysaktivitet (Kp) fra <a href="https://www.swpc.noaa.gov/products/planetary-k-index" target="_blank" rel="noopener">NOAA SWPC</a>. Dette er et hjelpeverktøy, ikke et offisielt farevarsel. Sjekk alltid farevarsler på <a href="https://www.yr.no/nb/farevarsler" target="_blank" rel="noopener">yr.no</a>. Data: CC BY 4.0. Siden oppdateres hver time.</p>
+</div>
+
+<script>
+const TZ="Europe/Oslo", LAT=66.50, LON=12.10;
+const fmtT=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const fmtH=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,hour:"2-digit"});
+const fmtD=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,weekday:"short",day:"numeric"});
+const fmtHMf=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,weekday:"short",hour:"2-digit",minute:"2-digit"});
+const fmtClock=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,hour:"2-digit",minute:"2-digit"});
+const fmtWd=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,weekday:"long"});
+const fmtDM=new Intl.DateTimeFormat("nb-NO",{timeZone:TZ,day:"numeric",month:"short"});
+const fmtKey=new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"});
+const d=s=>new Date(s);
+const fmtHM=t=>fmtHMf.format(d(t));
+const nb=(v,n=1)=>v.toFixed(n).replace(".",",");
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const $=id=>document.getElementById(id);
+const NAMES=["Normal","Forhøyet","Høy","Svært høy","Ekstrem"];
+const WAVE_NAMES=["Rolig til moderat","Grov sjø","Svært grov sjø","Høy sjø"];
+const WIND_NAMES=["Under kuling","Kuling","Sterk kuling","Storm"];
+function waterStatus(v,L){ if(v>=L.Y20)return 4; if(v>=L.Y5)return 3; if(v>=L.Y1)return 2; if(v>=L.HAT)return 1; return 0; }
+function waveStatus(h){ if(h>=8)return 3; if(h>=6)return 2; if(h>=4)return 1; return 0; }
+function windStatus(ws){ if(ws>=20.8)return 3; if(ws>=17.2)return 2; if(ws>=10.8)return 1; return 0; }
+const sx=(lvl,txt)=>`<span class="pill s${lvl}">${txt}</span>`;
+function dirName(deg){ return ["nord","nordøst","øst","sørøst","sør","sørvest","vest","nordvest"][Math.round(deg/45)%8]; }
+function dirShort(deg){ return ["N","NØ","Ø","SØ","S","SV","V","NV"][Math.round(deg/45)%8]; }
+function nearestIn(arr,t,maxH=2){ let best=null,bd=Infinity; for(const w of arr||[]){const dd=Math.abs(d(w.t)-d(t)); if(dd<bd){bd=dd;best=w;}} return bd<=maxH*3600e3?best:null; }
+const nearestWave=(V,t)=>nearestIn(V,t,2);
+
+/* ---------- sun position (for darkness) ---------- */
+function sunAlt(date){
+  const rad=Math.PI/180, n=(+date/864e5)+2440587.5-2451545.0;
+  const g=(357.529+0.98560028*n)*rad, q=280.459+0.98564736*n;
+  const L=(q+1.915*Math.sin(g)+0.020*Math.sin(2*g))*rad, e=(23.439-0.00000036*n)*rad;
+  const ra=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L)), dec=Math.asin(Math.sin(e)*Math.sin(L));
+  const gmst=((18.697374558+24.06570982441908*n)%24+24)%24, ha=(gmst*15+LON)*rad-ra;
+  return Math.asin(Math.sin(LAT*rad)*Math.sin(dec)+Math.cos(LAT*rad)*Math.cos(dec)*Math.cos(ha))/rad;
+}
+const isDark=t=>sunAlt(d(t))< -6;
+
+/* ---------- weather symbols ---------- */
+const SYM_TXT={clearsky:"Klarvær",fair:"Lettskyet",partlycloudy:"Delvis skyet",cloudy:"Skyet",fog:"Tåke",
+  lightrain:"Lett regn",rain:"Regn",heavyrain:"Kraftig regn",lightrainshowers:"Lette regnbyger",rainshowers:"Regnbyger",heavyrainshowers:"Kraftige regnbyger",
+  lightsleet:"Lett sludd",sleet:"Sludd",heavysleet:"Kraftig sludd",lightsleetshowers:"Lette sluddbyger",sleetshowers:"Sluddbyger",heavysleetshowers:"Kraftige sluddbyger",
+  lightsnow:"Lett snø",snow:"Snø",heavysnow:"Kraftig snø",lightsnowshowers:"Lette snøbyger",snowshowers:"Snøbyger",heavysnowshowers:"Kraftige snøbyger"};
+function symParts(code){
+  const [base0,var0]=(code||"cloudy").split("_"); let base=base0, thunder=false;
+  if(base.endsWith("andthunder")){thunder=true; base=base.replace("andthunder","");}
+  if(base.endsWith("showersthunder")) {thunder=true; base=base.replace("thunder","");}
+  return {base, night:var0==="night"||var0==="polartwilight", thunder};
+}
+function symText(code){ const p=symParts(code); return (SYM_TXT[p.base]||"Skyet")+(p.thunder?" og torden":""); }
+function icon(code,cls="ico"){
+  const p=symParts(code), b=p.base;
+  const kind = b.includes("snow")?"snow": b.includes("sleet")?"sleet": b.includes("rain")?"rain": b;
+  const showers=b.includes("showers"), heavy=b.startsWith("heavy"), light=b.startsWith("light");
+  const body=p.night
+    ? `<path d="M15 4.5a8.5 8.5 0 1 0 9.5 11.6A7 7 0 0 1 15 4.5Z" fill="var(--moon)"/>`
+    : `<g stroke="var(--sun)" stroke-width="1.8" stroke-linecap="round">${[0,45,90,135,180,225,270,315].map(a=>{const r=a*Math.PI/180;return `<line x1="${(13+Math.cos(r)*8.5).toFixed(1)}" y1="${(12+Math.sin(r)*8.5).toFixed(1)}" x2="${(13+Math.cos(r)*11).toFixed(1)}" y2="${(12+Math.sin(r)*11).toFixed(1)}"/>`}).join("")}</g><circle cx="13" cy="12" r="6" fill="var(--sun)"/>`;
+  const cloud=(dx=0,dy=0,s=1,fill="var(--cloud)")=>`<path transform="translate(${dx} ${dy}) scale(${s})" d="M9 26h15a5.5 5.5 0 0 0 .6-11A7.5 7.5 0 0 0 10.2 17 4.6 4.6 0 0 0 9 26Z" fill="${fill}"/>`;
+  let s="";
+  if(kind==="clearsky") s=p.night?`<g transform="translate(3 3)">${body}</g>`:`<g transform="translate(3 4)">${body}</g>`;
+  else if(kind==="fair") s=`<g transform="translate(0 0)">${body}</g>`+cloud(9,10,.72);
+  else if(kind==="partlycloudy") s=`<g transform="translate(-2 -2) scale(.95)">${body}</g>`+cloud(0,0,1);
+  else if(kind==="cloudy") s=cloud(4,-4,.8,"var(--cloud-dk)")+cloud(-1,0,1);
+  else if(kind==="fog") s=`<g stroke="var(--cloud-dk)" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="11" x2="27" y2="11"/><line x1="7" y1="17" x2="25" y2="17"/><line x1="5" y1="23" x2="27" y2="23"/></g>`;
+  else {
+    const n=heavy?3:light?1:2;
+    const top=showers?`<g transform="translate(-2 -4) scale(.8)">${body}</g>`+cloud(0,-3,1):cloud(4,-7,.8,"var(--cloud-dk)")+cloud(-1,-3,1);
+    let drops="";
+    const xs=[[12],[10,18],[8,14,20]][n-1];
+    for(const x of xs){
+      if(kind==="rain") drops+=`<line x1="${x+1.5}" y1="25" x2="${x-0.5}" y2="30" stroke="var(--rain)" stroke-width="2" stroke-linecap="round"/>`;
+      else if(kind==="snow") drops+=`<circle cx="${x}" cy="27.5" r="1.8" fill="var(--snow)"/>`;
+      else drops+=(xs.indexOf(x)%2?`<circle cx="${x}" cy="27.5" r="1.7" fill="var(--snow)"/>`:`<line x1="${x+1.5}" y1="25" x2="${x-0.5}" y2="30" stroke="var(--rain)" stroke-width="2" stroke-linecap="round"/>`);
+    }
+    s=top+drops;
+  }
+  if(p.thunder) s+=`<path d="M17 21l-3 5h3l-2 5 5-7h-3l2-3Z" fill="var(--bolt)"/>`;
+  return `<svg class="${cls}" viewBox="0 0 32 32" role="img" aria-label="${symText(code)}">${s}</svg>`;
+}
+function windArrow(deg){ return `<svg viewBox="-8 -8 16 16" aria-hidden="true"><g transform="rotate(${(deg+180)%360})"><path d="M0,-7 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--muted)"/></g></svg>`; }
+
+/* ---------- seven days ---------- */
+function buildDays(A,A6){
+  const days=new Map();
+  const get=t=>{const k=fmtKey.format(d(t)); if(!days.has(k)) days.set(k,{k,t,ts:[],ws:[],wg:[],pr:0,prN:0,syms:[],wdAt:null}); return days.get(k);};
+  for(const r of A||[]){ const x=get(r.t); x.ts.push(r.ta); x.ws.push(r); if(r.wg!=null)x.wg.push(r.wg); if(r.pr!=null){x.pr+=r.pr;x.prN++;}
+    const h=+fmtH.format(d(r.t)); if(r.sym) x.syms.push({h,sym:r.sym}); }
+  for(const r of A6||[]){ const x=get(r.t); x.ts.push(r.ta); if(r.tmax!=null)x.ts.push(r.tmax); if(r.tmin!=null)x.ts.push(r.tmin); x.ws.push(r); if(r.wg!=null)x.wg.push(r.wg); if(r.pr!=null){x.pr+=r.pr;x.prN++;}
+    const h=+fmtH.format(d(r.t)); if(r.sym) x.syms.push({h:h+3,sym:r.sym}); }
+  const out=[...days.values()].sort((a,b)=>a.k<b.k?-1:1).map(x=>{
+    const mw=x.ws.reduce((a,b)=>b.ws>a.ws?b:a);
+    const day=x.syms.filter(s=>!s.sym.endsWith("_night"));
+    const pool=day.length?day:x.syms;
+    const sym=pool.length?pool.reduce((a,b)=>Math.abs(b.h-13)<Math.abs(a.h-13)?b:a).sym:"cloudy";
+    return {k:x.k,t:x.t,tmax:Math.max(...x.ts),tmin:Math.min(...x.ts),ws:mw.ws,wd:mw.wd,wg:x.wg.length?Math.max(...x.wg):null,pr:x.prN?x.pr:null,sym,n:x.ws.length};
+  });
+  return out.slice(0,7);
+}
+function daysList(days){
+  const today=fmtKey.format(new Date()), tomorrow=fmtKey.format(new Date(Date.now()+864e5));
+  return `<div class="days" role="table" aria-label="Værvarsel sju dager">
+    <div class="dayrow dayhead" role="row"><span>Dag</span><span></span><span>Maks / min</span><span class="pr" style="color:inherit">Nedbør</span><span>Vind m/s</span></div>
+    ${days.map(x=>{
+      const name=x.k===today?"I dag":x.k===tomorrow?"I morgen":cap(fmtWd.format(d(x.t)));
+      return `<div class="dayrow" role="row">
+        <span class="dn">${name}<small>${fmtDM.format(d(x.t))}</small></span>
+        ${icon(x.sym)}
+        <span class="t">${Math.round(x.tmax)}° <span class="lo">/ ${Math.round(x.tmin)}°</span></span>
+        <span class="pr${!x.pr?" zero":""}">${x.pr==null?"–":nb(x.pr)+" mm"}</span>
+        <span class="w">${windArrow(x.wd)}${nb(x.ws)}${x.wg!=null?` <span class="gust" style="color:var(--muted)">(${nb(x.wg)})</span>`:""}</span>
+      </div>`;}).join("")}
+  </div>`;
+}
+
+/* ---------- weather now ---------- */
+function weatherNow(A){
+  if(!A||!A.length) return `<p class="note">Værdata kommer ved neste oppdatering.</p>`;
+  const now=Date.now();
+  const cur=A.reduce((a,b)=>Math.abs(d(b.t)-now)<Math.abs(d(a.t)-now)?b:a);
+  const prev=nearestIn(A,new Date(+d(cur.t)-3*3600e3).toISOString(),0.5);
+  const dp=prev&&cur.p!=null&&prev.p!=null?cur.p-prev.p:null;
+  const trend=dp==null?"–":dp<=-1?`↓ ${nb(dp)} siste 3 t`:dp>=1?`↑ +${nb(dp)} siste 3 t`:"stabilt siste 3 t";
+  return `<div class="now">
+      ${icon(cur.sym)}
+      <div><div class="temp">${cur.ta!=null?Math.round(cur.ta)+"°":"–"}</div><div class="desc">${symText(cur.sym)} · ${fmtClock.format(d(cur.t))}</div></div>
+    </div>
+    <div class="wx">
+      <div><span class="rl">Vind</span><span class="rv">${nb(cur.ws)} m/s</span><span class="note">fra ${dirName(cur.wd)} · ${WIND_NAMES[windStatus(cur.ws)].toLowerCase()}</span></div>
+      <div><span class="rl">Vindkast</span><span class="rv">${cur.wg!=null?nb(cur.wg)+" m/s":"–"}</span></div>
+      <div><span class="rl">Lufttrykk</span><span class="rv">${cur.p!=null?cur.p.toFixed(0)+" hPa":"–"}</span><span class="note">${trend}</span></div>
+      <div><span class="rl">Nedbør</span><span class="rv">${cur.pr!=null?nb(cur.pr)+" mm/t":"–"}</span><span class="note">skydekke ${cur.cl!=null?Math.round(cur.cl)+" %":"–"}</span></div>
+    </div>`;
+}
+
+/* ---------- charts ---------- */
+const SC={};
+let selT=null;
+function dayTicks(arr,X,mt,h,mb){ let s=""; for(const r of arr){ if(+fmtH.format(d(r.t))===0){const x=X(r.t); s+=`<line x1="${x}" x2="${x}" y1="${mt}" y2="${h-mb}" stroke="var(--rule)"/><text x="${x+4}" y="${h-mb+14}">${fmtD.format(d(r.t))}</text>`;} } return s; }
+function nowLine(X,t0,t1,mt,h,mb,ly){ const now=new Date(); if(now>t0&&now<t1){const x=X(now.toISOString()); return `<line x1="${x}" x2="${x}" y1="${mt}" y2="${h-mb}" stroke="var(--fg)" stroke-width="1"/><text x="${x+4}" y="${ly}" style="fill:var(--fg)">nå</text>`;} return ""; }
+
+function chartWater(doc){
+  const L=doc.levels, W=doc.water, w=760, h=300, ml=44, mr=96, mt=12, mb=34;
+  const t0=d(W[0].t), t1=d(W[W.length-1].t);
+  const vals=W.flatMap(r=>[r.fc,r.pre,r.obs??r.fc]);
+  const lo=Math.floor((Math.min(...vals)-20)/50)*50, hi=Math.max(L.Y20+15, Math.max(...vals)+20);
+  const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr), Y=v=>mt+(hi-v)/(hi-lo)*(h-mt-mb);
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Vannstandsvarsel for Træna">`;
+  for(let v=Math.ceil(lo/50)*50; v<=hi; v+=50){ s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="1"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end">${v}</text>`; }
+  s+=dayTicks(W,X,mt,h,mb);
+  const th=[["MHW","Middel høyvann","var(--tide)"],["HAT","Høyeste tidevann","var(--warn)"],["Y1","Årlig stormflo","var(--high)"],["Y5","5-års","var(--crit)"],["Y20","20-års","var(--crit)"]];
+  for(const [k,n,c] of th){ if(L[k]>hi||L[k]<lo) continue; const y=Y(L[k]); s+=`<line x1="${ml}" x2="${w-mr}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.2" stroke-dasharray="${k==="MHW"?"2 4":"6 4"}"/><text x="${w-mr+6}" y="${y+3}" style="fill:${c}">${n} ${L[k].toFixed(0)}</text>`; }
+  const line=(key,attrs)=>`<path d="${W.map((r,i)=>`${i?"L":"M"}${X(r.t).toFixed(1)},${Y(r[key]).toFixed(1)}`).join("")}" fill="none" ${attrs}/>`;
+  s+=`<path d="M${X(W[0].t)},${Y(lo)}${W.map(r=>`L${X(r.t).toFixed(1)},${Y(r.fc).toFixed(1)}`).join("")}L${X(W[W.length-1].t)},${Y(lo)}Z" fill="var(--accent)" opacity=".10"/>`;
+  s+=line("pre",`stroke="var(--tide)" stroke-width="1.6" stroke-dasharray="5 4"`)+line("fc",`stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"`);
+  for(const r of W) if(r.obs!=null) s+=`<circle cx="${X(r.t)}" cy="${Y(r.obs)}" r="2.6" fill="var(--fg)"/>`;
+  s+=nowLine(X,t0,t1,mt,h,mb,h-mb-6);
+  const m=W.reduce((a,b)=>b.fc>a.fc?b:a); s+=`<circle cx="${X(m.t)}" cy="${Y(m.fc)}" r="4.5" fill="var(--panel)" stroke="var(--accent)" stroke-width="2.5"/><text x="${X(m.t)}" y="${Y(m.fc)-9}" text-anchor="middle" style="fill:var(--fg);font-weight:600">${m.fc.toFixed(0)}</text>`;
+  s+=`<g class="cur"><line id="cwl" y1="${mt}" y2="${h-mb}"/><circle id="cwt" r="3.5" class="tdot"/><circle id="cwd" r="5"/><rect id="cwb" height="18" rx="3"/><text id="cwx" text-anchor="middle"></text></g>`;
+  SC.water={X,Y,t0,t1,w,ml,mr};
+  return s+`</svg>`;
+}
+function chartWaves(doc){
+  const V=doc.waves; if(!V||!V.length) return `<p class="note">Ingen bølgedata.</p>`;
+  const w=760,h=200,ml=44,mr=96,mt=10,mb=30, t0=d(V[0].t), t1=d(V[V.length-1].t);
+  const hi=Math.max(9,Math.ceil(Math.max(...V.map(v=>v.hs))+1));
+  const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr), Y=v=>mt+(hi-v)/hi*(h-mt-mb);
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Bølgevarsel vest for Træna">`;
+  for(let v=0;v<=hi;v+=2) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end">${v} m</text>`;
+  for(const [v,n,c] of [[4,"Grov sjø","var(--warn)"],[6,"Svært grov","var(--high)"],[8,"Høy sjø","var(--crit)"]]) if(v<=hi) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/><text x="${w-mr+6}" y="${Y(v)+3}" style="fill:${c}">${n} ${v} m</text>`;
+  s+=dayTicks(V,X,mt,h,mb);
+  const bw=Math.max(2,(w-ml-mr)/V.length-1);
+  for(const r of V){ const c=["var(--tide)","var(--warn)","var(--high)","var(--crit)"][waveStatus(r.hs)]; s+=`<rect x="${(X(r.t)-bw/2).toFixed(1)}" y="${Y(r.hs).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(0)-Y(r.hs)).toFixed(1)}" fill="${c}" opacity=".85"/>`; }
+  s+=`<g class="cur" id="cv"><line id="cvl" y1="${mt}" y2="${h-mb}"/><circle id="cvd" r="5"/><rect id="cvb" height="18" rx="3"/><text id="cvx" text-anchor="middle"></text></g>`;
+  SC.waves={X,Y,t0,t1,w,ml,mr};
+  return s+`</svg>`;
+}
+function chartWind(doc){
+  const A=doc.weather; if(!A||!A.length) return `<p class="note">Vinddata kommer ved neste oppdatering.</p>`;
+  const w=760,h=220,ml=44,mr=96,mt=10,mb=30, t0=d(A[0].t), t1=d(A[A.length-1].t);
+  const hi=Math.max(24,Math.ceil((Math.max(...A.map(r=>r.wg??r.ws))+3)/4)*4);
+  const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr), Y=v=>mt+(hi-v)/hi*(h-mt-mb);
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Vindvarsel for Træna">`;
+  for(let v=0;v<=hi;v+=4) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end">${v}</text>`;
+  for(const [v,n,c] of [[10.8,"Kuling","var(--warn)"],[17.2,"St. kuling","var(--high)"],[20.8,"Storm","var(--crit)"]]) if(v<=hi) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/><text x="${w-mr+6}" y="${Y(v)+3}" style="fill:${c}">${n} ${nb(v)}</text>`;
+  s+=dayTicks(A,X,mt,h,mb);
+  const G=A.filter(r=>r.wg!=null);
+  if(G.length) s+=`<path d="M${X(G[0].t).toFixed(1)},${Y(0)}${G.map(r=>`L${X(r.t).toFixed(1)},${Y(r.wg).toFixed(1)}`).join("")}L${X(G[G.length-1].t).toFixed(1)},${Y(0)}Z" fill="var(--gust)" opacity=".22"/>`;
+  s+=`<path d="${A.map((r,i)=>`${i?"L":"M"}${X(r.t).toFixed(1)},${Y(r.ws).toFixed(1)}`).join("")}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  A.forEach((r,i)=>{ if(i%3) return; s+=`<g transform="translate(${X(r.t).toFixed(1)},${h-mb-10}) rotate(${(r.wd+180)%360})"><path d="M0,-6 L3.5,4 L0,2 L-3.5,4 Z" fill="var(--muted)"/></g>`; });
+  s+=nowLine(X,t0,t1,mt,h,mb,h-mb-22);
+  s+=`<text x="${ml-6}" y="${mt-1}" text-anchor="end">m/s</text>`;
+  s+=`<g class="cur" id="cn"><line id="cnl" y1="${mt}" y2="${h-mb}"/><circle id="cng" r="3.5" class="gdot"/><circle id="cnd" r="5"/><rect id="cnb" height="18" rx="3"/><text id="cnx" text-anchor="middle"></text></g>`;
+  SC.wind={X,Y,t0,t1,w,ml,mr};
+  return s+`</svg>`;
+}
+
+/* ---------- tide: flo og fjære ---------- */
+function extremes(W){
+  const out=[];
+  for(let i=1;i<W.length-1;i++){
+    const a=W[i-1].fc,b=W[i].fc,c=W[i+1].fc;
+    if(b>=a&&b>c) out.push({...W[i],kind:"hi"});
+    else if(b<=a&&b<c) out.push({...W[i],kind:"lo"});
+  }
+  return out;
+}
+function tideTable(doc){
+  const L=doc.levels, V=doc.waves||[], A=doc.weather||[], now=Date.now();
+  const ex=extremes(doc.water).filter(r=>+d(r.t)>=now-2*3600e3);
+  if(!ex.length) return `<p class="note">Ingen flo eller fjære i perioden.</p>`;
+  let lastDay="", rows="";
+  for(const r of ex){
+    const k=fmtKey.format(d(r.t));
+    if(k!==lastDay){ lastDay=k; rows+=`<tr class="day"><td colspan="6">${cap(fmtWd.format(d(r.t)))} ${fmtDM.format(d(r.t))}</td></tr>`; }
+    const sg=r.fc-r.pre, v=nearestWave(V,r.t), a=nearestIn(A,r.t,1);
+    let ass="";
+    if(r.kind==="hi"){ const st=waterStatus(r.fc,L), vst=v?waveStatus(v.hs):0; ass=sx(st,NAMES[st])+(v&&vst>0?" "+sx(vst,WAVE_NAMES[vst]):""); }
+    rows+=`<tr><td><span class="kind${r.kind==="lo"?" lo":""}">${r.kind==="hi"?"Flo":"Fjære"}</span></td><td class="n">${fmtClock.format(d(r.t))}</td><td class="n">${r.fc.toFixed(0)}</td><td class="n">${sg>0?"+":""}${sg.toFixed(0)}</td><td class="n">${v?nb(v.hs)+" m":"–"}</td><td>${ass}</td></tr>`;
+  }
+  return `<div class="tblwrap"><table>
+    <thead><tr><th></th><th class="n">Kl.</th><th class="n">cm</th><th class="n">Vær</th><th class="n">Bølger</th><th>Vurdering</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+/* ---------- aurora ---------- */
+function kpAt(K,t){ const ms=+d(t); const b=(K||[]).find(k=>ms>=+d(k.t)&&ms<+d(k.t)+3*3600e3); return b?b.kp:null; }
+function kpLevel(kp){ return kp==null?null: kp>=6?"Svært høy": kp>=4?"Høy": kp>=2?"Moderat":"Lav"; }
+function skyText(cl){ return cl<25?"Klart": cl<50?"Lettskyet": cl<75?"Delvis skyet":"Overskyet"; }
+function buildNights(doc){
+  const A=doc.weather||[], A6=doc.weather6||[], K=doc.kp||[], now=Date.now();
+  const pts=[...A.map(r=>({t:r.t,cl:r.cl,h:1})),...A6.map(r=>({t:r.t,cl:r.cl,h:6}))].filter(r=>r.cl!=null);
+  if(!pts.length) return [];
+  const nights=[];
+  for(let i=-1;i<7;i++){
+    const key=fmtKey.format(new Date(now+i*864e5));
+    // window: local noon on this date to local noon the next date
+    const noonZ=Date.parse(`${key}T12:00:00Z`), offH=+fmtH.format(new Date(noonZ))-12;
+    const w0=noonZ-offH*3600e3, w1=w0+864e5;
+    if(w1<now) continue;
+    const dark=pts.filter(p=>+d(p.t)>=w0&&+d(p.t)<w1&&isDark(p.t)&&+d(p.t)>=now-3600e3);
+    if(!dark.length) continue;
+    const hourly=dark.some(p=>p.h===1);
+    const use=hourly?dark.filter(p=>p.h===1):dark;
+    if(w0<now && hourly && use.length<3) continue; // natten er nesten over
+    const mean=use.reduce((s,p)=>s+p.cl,0)/use.length;
+    const best=use.reduce((a,b)=>b.cl<a.cl?b:a);
+    const clearH=hourly?use.filter(p=>p.cl<30).length:null;
+    let kps=[]; for(let t=w0;t<w1;t+=3600e3){ if(isDark(new Date(t).toISOString())&&t>=now-3600e3){const k=kpAt(K,new Date(t).toISOString()); if(k!=null) kps.push(k);} }
+    const kp=kps.length?Math.max(...kps):null;
+    let score, verdict;
+    if(mean>=80 && (clearH==null||clearH<2)) {score=0; verdict="Dårlig sikt";}
+    else if(kp==null){ score=mean<40?2:1; verdict=mean<40?"God sikt":"Varierende sikt"; }
+    else if(kp>=3 && mean<50){score=3; verdict="Gode sjanser";}
+    else if(kp>=2 && mean<75){score=2; verdict="Brukbare sjanser";}
+    else {score=1; verdict=kp<2?"Lite aktivitet":"Små sjanser";}
+    nights.push({key,w0,mean,best,clearH,kp,score,verdict,hourly,n:use.length});
+    if(nights.length>=4) break;
+  }
+  return nights;
+}
+function nightCards(nights){
+  if(!nights.length) return `<p class="note">Ingen mørke timer med skydata i perioden.</p>`;
+  const tonight=fmtKey.format(new Date());
+  return `<div class="nights">${nights.map(n=>{
+    const name=n.key===tonight?"I natt":"Natt til "+fmtWd.format(new Date(n.w0+864e5));
+    return `<div class="night a${n.score}">
+      <div class="nd">${name}</div>
+      <div class="verdict">${n.verdict}</div>
+      <dl>
+        <dt>Skydekke</dt><dd>${Math.round(n.mean)} % (${skyText(n.mean).toLowerCase()})</dd>
+        ${n.clearH!=null?`<dt>Klare timer</dt><dd>${n.clearH} av ${n.n}</dd>`:""}
+        ${n.hourly?`<dt>Klarest</dt><dd>kl. ${fmtClock.format(d(n.best.t))} (${Math.round(n.best.cl)} %)</dd>`:""}
+        <dt>Aktivitet</dt><dd>${n.kp!=null?`Kp ${nb(n.kp)} (${kpLevel(n.kp).toLowerCase()})`:"ikke varslet"}</dd>
+      </dl>
+    </div>`;}).join("")}</div>`;
+}
+function chartAurora(doc){
+  const A=doc.weather||[], K=doc.kp||[]; if(!A.length) return "";
+  const w=760,h=210,ml=44,mr=96,mt=10,mb=30, t0=d(A[0].t), t1=d(A[A.length-1].t);
+  const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr);
+  const kTop=mt, kBot=mt+64, cTop=kBot+18, cBot=h-mb;
+  const YK=v=>kBot-(v/9)*(kBot-kTop), YC=v=>cBot-(v/100)*(cBot-cTop);
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Nordlysaktivitet og skydekke over Træna">`;
+  // darkness bands
+  let band=null;
+  for(let i=0;i<A.length;i++){ const dk=isDark(A[i].t); if(dk&&band==null) band=A[i].t; if((!dk||i===A.length-1)&&band!=null){ const end=A[i].t; s+=`<rect x="${X(band).toFixed(1)}" y="${mt}" width="${Math.max(1,X(end)-X(band)).toFixed(1)}" height="${h-mb-mt}" fill="var(--night)"/>`; band=null; } }
+  s+=dayTicks(A,X,mt,h,mb);
+  // kp rows
+  for(const v of [0,3,6,9]) s+=`<line x1="${ml}" x2="${w-mr}" y1="${YK(v)}" y2="${YK(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${YK(v)+3}" text-anchor="end">${v}</text>`;
+  s+=`<text x="${w-mr+6}" y="${kTop+12}" style="fill:var(--kp)">Kp</text><text x="${w-mr+6}" y="${kTop+26}">aktivitet</text>`;
+  for(const k of K){ const a=d(k.t), b=new Date(+a+3*3600e3); if(b<=t0||a>=t1) continue;
+    const x0=X(a<t0?t0.toISOString():k.t), x1=X(b>t1?t1.toISOString():b.toISOString());
+    s+=`<rect x="${(x0+1).toFixed(1)}" y="${YK(k.kp).toFixed(1)}" width="${Math.max(1,x1-x0-2).toFixed(1)}" height="${(kBot-YK(k.kp)).toFixed(1)}" fill="var(--kp)" opacity="${k.k==="predicted"?.6:.95}"/>`; }
+  // clouds
+  for(const v of [0,50,100]) s+=`<line x1="${ml}" x2="${w-mr}" y1="${YC(v)}" y2="${YC(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${YC(v)+3}" text-anchor="end">${v}%</text>`;
+  s+=`<text x="${w-mr+6}" y="${cTop+12}">Skydekke</text>`;
+  const C=A.filter(r=>r.cl!=null);
+  if(C.length) s+=`<path d="M${X(C[0].t).toFixed(1)},${YC(0)}${C.map(r=>`L${X(r.t).toFixed(1)},${YC(r.cl).toFixed(1)}`).join("")}L${X(C[C.length-1].t).toFixed(1)},${YC(0)}Z" fill="var(--cloud)" opacity=".9"/>`;
+  s+=nowLine(X,t0,t1,mt,h,mb,h-mb-6);
+  s+=`<g class="cur"><line id="cal" y1="${mt}" y2="${h-mb}"/><circle id="cak" r="3.5" class="gdot" style="stroke:var(--kp)"/><circle id="cac" r="5" style="stroke:var(--cloud-dk)"/><rect id="cab" height="18" rx="3"/><text id="cax" text-anchor="middle"></text></g>`;
+  SC.aurora={X,YK,YC,kBot,t0,t1,w,ml,mr};
+  return s+`</svg>`;
+}
+function hourVerdict(dark,cl,kp){
+  if(!dark) return [0,"For lyst"];
+  if(cl!=null&&cl>=75) return [0,"Overskyet"];
+  if(kp==null) return cl!=null&&cl<40?[2,"God sikt"]:[1,"Varierende sikt"];
+  if(kp>=3&&cl<50) return [3,"Gode sjanser"];
+  if(kp>=2&&cl<75) return [2,"Brukbare sjanser"];
+  return [1,kp<2?"Lite aktivitet":"Små sjanser"];
+}
+function setupAurora(doc){
+  const A=doc.weather||[], K=doc.kp||[], sl=$("aslider"); if(!sl||!SC.aurora) return;
+  const now=Date.now();
+  const idxAt=ms=>{let bi=0,bd=Infinity;A.forEach((r,i)=>{const dd=Math.abs(d(r.t)-ms);if(dd<bd){bd=dd;bi=i;}});return bi;};
+  // start på første mørke time fra nå
+  let start=A.findIndex(r=>+d(r.t)>=now-1800e3&&isDark(r.t)); if(start<0) start=idxAt(now);
+  sl.value=start;
+  function update(){
+    const r=A[+sl.value], s=SC.aurora, x=s.X(r.t), alt=sunAlt(d(r.t)), dark=alt< -6, kp=kpAt(K,r.t);
+    setX("cal",x);
+    if(r.cl!=null){ $("cac").style.display=""; setC("cac",x,s.YC(r.cl)); } else $("cac").style.display="none";
+    if(kp!=null){ $("cak").style.display=""; setC("cak",x,s.YK(kp)); } else $("cak").style.display="none";
+    placeLabel($("cab"),$("cax"),x,0,s.w,s.ml,s.mr,`${fmtHM(r.t)} · ${r.cl!=null?Math.round(r.cl)+" % skyer":""}${kp!=null?" · Kp "+nb(kp):""}`);
+    const [sc,txt]=hourVerdict(dark,r.cl,kp);
+    const light=alt>0?"Sola er oppe":alt>-6?"Skumring":alt>-12?"Mørkt":"Helt mørkt";
+    $("areadout").innerHTML=`
+      <div class="rt">${cap(fmtT.format(d(r.t)))}</div>
+      <div class="rgrid">
+        <div><span class="rl">Lys</span><span class="rv">${light}</span></div>
+        <div><span class="rl">Skydekke</span><span class="rv">${r.cl!=null?Math.round(r.cl)+" % ("+skyText(r.cl).toLowerCase()+")":"–"}</span></div>
+        <div><span class="rl">Aktivitet</span><span class="rv">${kp!=null?"Kp "+nb(kp)+" ("+kpLevel(kp).toLowerCase()+")":"ikke varslet"}</span></div>
+        <div><span class="rl">Vær</span><span class="rv">${r.sym?symText(r.sym):"–"}</span></div>
+      </div>
+      <div><span class="pill a${sc}" style="color:var(--c);background:transparent;border:1px solid var(--c)">${txt}</span></div>`;
+  }
+  sl.addEventListener("input",update);
+  const svg=document.querySelector("#cha svg");
+  if(svg){
+    const pick=e=>{const s=SC.aurora, rc=svg.getBoundingClientRect(); const vx=(e.clientX-rc.left)/rc.width*s.w;
+      const f=Math.min(1,Math.max(0,(vx-s.ml)/(s.w-s.ml-s.mr))); sl.value=idxAt(+s.t0+f*(s.t1-s.t0)); update();};
+    let down=false;
+    svg.addEventListener("pointerdown",e=>{down=true;pick(e);});
+    svg.addEventListener("pointermove",e=>{if(down||e.pointerType==="mouse")pick(e);});
+    window.addEventListener("pointerup",()=>down=false);
+  }
+  update();
+}
+
+/* ---------- scrubber ---------- */
+function placeLabel(rect,text,x,y,w,ml,mr,str){
+  text.textContent=str; const tw=str.length*6.2+12;
+  const cx=Math.min(Math.max(x,ml+tw/2),w-mr-tw/2);
+  text.setAttribute("x",cx); text.setAttribute("y",y+12.5);
+  rect.setAttribute("x",cx-tw/2); rect.setAttribute("y",y); rect.setAttribute("width",tw);
+}
+function setX(id,x){const l=$(id); l.setAttribute("x1",x); l.setAttribute("x2",x);}
+function setC(id,x,y){const c=$(id); c.setAttribute("cx",x); c.setAttribute("cy",y);}
+function setupScrub(doc){
+  const W=doc.water, V=doc.waves||[], A=doc.weather||[], L=doc.levels;
+  const sl=$("tslider"); if(!sl) return;
+  const nearestIdx=ms=>{let bi=0,bd=Infinity;W.forEach((r,i)=>{const dd=Math.abs(d(r.t)-ms);if(dd<bd){bd=dd;bi=i;}});return bi;};
+  sl.value=nearestIdx(selT??Date.now());
+  function update(){
+    const i=+sl.value, r=W[i]; selT=+d(r.t);
+    const sw=SC.water, x=sw.X(r.t);
+    setX("cwl",x); setC("cwd",x,sw.Y(r.fc)); setC("cwt",x,sw.Y(r.pre));
+    placeLabel($("cwb"),$("cwx"),x,2,sw.w,sw.ml,sw.mr,`${fmtHM(r.t)} · ${r.fc.toFixed(0)} cm`);
+    const v=nearestWave(V,r.t), g=$("cv");
+    if(g){ if(v&&SC.waves){ g.style.display=""; const s2=SC.waves, vx=s2.X(v.t); setX("cvl",vx); setC("cvd",vx,s2.Y(v.hs)); placeLabel($("cvb"),$("cvx"),vx,0,s2.w,s2.ml,s2.mr,`${fmtHM(v.t)} · ${nb(v.hs)} m`);} else g.style.display="none"; }
+    const a=nearestIn(A,r.t,1), gn=$("cn");
+    if(gn){ if(a&&SC.wind){ gn.style.display=""; const s3=SC.wind, ax=s3.X(a.t); setX("cnl",ax); setC("cnd",ax,s3.Y(a.ws)); setC("cng",ax,s3.Y(a.wg??a.ws)); placeLabel($("cnb"),$("cnx"),ax,0,s3.w,s3.ml,s3.mr,`${fmtHM(a.t)} · ${nb(a.ws)} (${nb(a.wg??a.ws)}) m/s`);} else gn.style.display="none"; }
+    const sg=r.fc-r.pre, st=waterStatus(r.fc,L), vst=v?waveStatus(v.hs):0, nst=a?windStatus(a.ws):0, toHat=L.HAT-r.fc;
+    $("readout").innerHTML=`
+      <div class="rt">${cap(fmtT.format(d(r.t)))}</div>
+      <div class="rgrid">
+        <div><span class="rl">Varsel med vær</span><span class="rv">${r.fc.toFixed(0)} cm</span></div>
+        <div><span class="rl">Bare tidevann</span><span class="rv">${r.pre.toFixed(0)} cm</span></div>
+        <div><span class="rl">Værets virkning</span><span class="rv">${sg>0?"+":""}${sg.toFixed(0)} cm</span></div>
+        <div><span class="rl">Målt</span><span class="rv">${r.obs!=null?r.obs.toFixed(0)+" cm":"–"}</span></div>
+        <div><span class="rl">Bølger</span><span class="rv">${v?nb(v.hs)+" m fra "+dirName(v.dir):"–"}</span></div>
+        <div><span class="rl">Vind (kast)</span><span class="rv">${a?nb(a.ws)+" ("+nb(a.wg??a.ws)+") m/s "+dirShort(a.wd):"–"}</span></div>
+        <div><span class="rl">Lufttrykk</span><span class="rv">${a&&a.p!=null?a.p.toFixed(0)+" hPa":"–"}</span></div>
+        <div><span class="rl">Til høyeste tidevann</span><span class="rv">${toHat>0?toHat.toFixed(0)+" cm under":Math.abs(toHat).toFixed(0)+" cm over"}</span></div>
+      </div>
+      <div>${sx(st,NAMES[st])}${v&&vst>0?" "+sx(vst,WAVE_NAMES[vst]):""}${a&&nst>0?" "+sx(nst,WIND_NAMES[nst]):""}</div>`;
+  }
+  sl.addEventListener("input",update);
+  function hook(id,key){
+    const svg=document.querySelector(`#${id} svg`); if(!svg) return;
+    const pick=e=>{const s=SC[key]; if(!s) return; const rc=svg.getBoundingClientRect();
+      const vx=(e.clientX-rc.left)/rc.width*s.w; const f=Math.min(1,Math.max(0,(vx-s.ml)/(s.w-s.ml-s.mr)));
+      sl.value=nearestIdx(+s.t0+f*(s.t1-s.t0)); update();};
+    let down=false;
+    svg.addEventListener("pointerdown",e=>{down=true;pick(e);});
+    svg.addEventListener("pointermove",e=>{if(down||e.pointerType==="mouse")pick(e);});
+    window.addEventListener("pointerup",()=>down=false);
+  }
+  hook("chw","water"); hook("chv","waves"); hook("chn","wind");
+  update();
+}
+
+function levelsList(L){
+  const rows=[
+    ["Y20","20-års stormflo","Inntreffer i snitt én gang per 20 år. Fare for skade på bygg og kaier i strandsonen."],
+    ["Y5","5-års stormflo","Sjelden høy vannstand. Lavtliggende naust, kaier og veier kan få vann."],
+    ["Y1","Årlig stormflo","Nås omtrent én gang i året. Sjekk fortøyninger og sikre løse ting."],
+    ["HAT","Høyeste astronomiske tidevann","Høyeste mulige tidevann uten vær. Over dette er det været som presser vannet opp."],
+    ["MHW","Middel høyvann","Vanlig flo."],
+  ];
+  $("levels").innerHTML=rows.map(([k,n,t])=>`<span class="v">${L[k].toFixed(0)}</span><span><strong>${n}</strong><br><span class="note">${t}</span></span><span class="k">${k}</span>`).join("");
+}
+
+/* ---------- page ---------- */
+function render(doc){
+  const L=doc.levels, W=doc.water, V=doc.waves||[], A=doc.weather||[], A6=doc.weather6||[];
+  const now=Date.now();
+  const fut=(arr)=>{const f=arr.filter(r=>d(r.t)>=now-3600e3); return f.length?f:arr;};
+  const fw=fut(W), fv=fut(V), fa=fut(A);
+  const mx=fw.reduce((a,b)=>b.fc>a.fc?b:a);
+  const mv=fv.length?fv.reduce((a,b)=>b.hs>a.hs?b:a):null;
+  const ma=fa.length?fa.reduce((a,b)=>b.ws>a.ws?b:a):null;
+  const ws=waterStatus(mx.fc,L), vs=mv?waveStatus(mv.hs):0, ns=ma?windStatus(ma.ws):0;
+  const toHat=L.HAT-mx.fc;
+  const combo=fw.filter(r=>{const v=nearestWave(V,r.t); return v&&v.hs>=5&&r.fc>=L.MHW;});
+
+  // alert banner (only when something needs attention)
+  const alerts=[];
+  if(ws>=1) alerts.push([ws,`Vannstanden ventes opp i ${mx.fc.toFixed(0)} cm ${fmtT.format(d(mx.t))} (${NAMES[ws].toLowerCase()}). Sjekk fortøyninger, naust og løse ting i strandsonen.`]);
+  if(combo.length) alerts.push([3,`Bølger på 5 m eller mer faller sammen med flo over middel høyvann ${fmtT.format(d(combo[0].t))}. Sjøen kan slå langt opp på land.`]);
+  if(vs>=2) alerts.push([vs,`${WAVE_NAMES[vs]} ute: opptil ${nb(mv.hs)} m ${fmtT.format(d(mv.t))}.`]);
+  if(ns>=2) alerts.push([ns,`${WIND_NAMES[ns]}: ${nb(ma.ws)} m/s fra ${dirName(ma.wd)} ${fmtT.format(d(ma.t))}.`]);
+  const top=alerts.length?Math.max(...alerts.map(a=>a[0])):0;
+  const banner=alerts.length?`<div class="banner s${top}" role="status">${alerts.map(a=>`<p>${a[1]}</p>`).join("")}</div>`:"";
+
+  let tideLead=`Ingen stormflo i sikte. Høyeste ventede vannstand er ${mx.fc.toFixed(0)} cm ${fmtT.format(d(mx.t))}, ${toHat.toFixed(0)} cm under høyeste astronomiske tidevann.`;
+  if(ws>=1) tideLead=`Høyeste ventede vannstand er ${mx.fc.toFixed(0)} cm ${fmtT.format(d(mx.t))}. Det er ${Math.abs(toHat).toFixed(0)} cm over høyeste astronomiske tidevann, så været presser vannet opp.`;
+
+  const days=buildDays(A,A6), nights=buildNights(doc);
+  const tonight=nights[0];
+
+  $("app").innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:20px">
+    ${banner}
+    <section class="panel">
+      <div class="sec-head"><h2>Været på Træna</h2><a class="lnk note" href="https://www.windy.com/66.500/12.100?66.500,12.100,9" target="_blank" rel="noopener">Se kartet på Windy</a></div>
+      ${weatherNow(A)}
+      <h3>Sju dager</h3>
+      ${days.length?daysList(days):`<p class="note">Langtidsvarsel kommer ved neste oppdatering.</p>`}
+      <h3>Vind neste døgn</h3>
+      <div class="chart" id="chn">${chartWind(doc)}</div>
+      <div class="legend"><span><i></i>Middelvind</span><span><i class="g"></i>Vindkast</span><span>Pilene viser hvor vinden blåser mot</span></div>
+    </section>
+
+    <section class="panel">
+      <div class="sec-head"><h2>Flo og fjære</h2>${sx(ws,"Vannstand: "+NAMES[ws].toLowerCase())}</div>
+      <p class="lead">${tideLead}</p>
+      ${tideTable(doc)}
+      <div class="chart" id="chw">${chartWater(doc)}</div>
+      <div class="legend"><span><i></i>Varsel med vær</span><span><i class="d"></i>Bare tidevann</span><span><i class="o"></i>Målt</span></div>
+      <div class="readout" id="readout" aria-live="polite"></div>
+      <label for="tslider" class="sr">Velg tidspunkt</label>
+      <input type="range" id="tslider" min="0" max="${W.length-1}" step="1" value="0">
+      <div class="ends"><span>${fmtT.format(d(W[0].t))}</span><span>${fmtT.format(d(W[W.length-1].t))}</span></div>
+      <p class="note">«Vær» er hvor mye vind og lufttrykk løfter eller senker vannet i forhold til vanlig tidevann. Lavtrykk og pålandsvind løfter vannet, høytrykk senker det.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Slik leses nivåene</h2>
+      <p class="note">Alle høyder er i cm over sjøkartnull, samme nivå som tidevannstabellen. Grensene er hentet fra Kartverkets nivåer for målestasjonen på Træna.</p>
+      <div class="levels" id="levels"></div>
+    </section>
+
+    <section class="panel">
+      <div class="sec-head"><h2>Bølger</h2>${sx(vs,WAVE_NAMES[vs])}</div>
+      <p class="lead">${mv?`Høyeste bølger ute: ${nb(mv.hs)} m fra ${dirName(mv.dir)} ${fmtT.format(d(mv.t))}.`:"Ingen bølgedata."}</p>
+      <div class="chart" id="chv">${chartWaves(doc)}</div>
+      <p class="note">Signifikant bølgehøyde på åpent hav vest for Træna. Linja følger tidspunktet du har valgt under flo og fjære.</p>
+    </section>
+
+    <section class="panel">
+      <div class="sec-head"><h2>Nordlys</h2>${tonight?`<span class="pill" style="--c:var(--aurora);--cbg:transparent;border:1px solid var(--aurora)">${tonight.key===fmtKey.format(new Date())?"I natt":"Neste natt"}: ${tonight.verdict.toLowerCase()}</span>`:""}</div>
+      ${nightCards(nights)}
+      <div class="chart" id="cha">${chartAurora(doc)}</div>
+      <div class="legend"><span><i class="n"></i>Mørkt nok (sola under −6°)</span><span><i class="k"></i>Kp-indeks</span><span><i class="c"></i>Skydekke</span></div>
+      ${(doc.weather||[]).length?`<div class="readout" id="areadout" aria-live="polite"></div>
+      <label for="aslider" class="sr">Velg tidspunkt for nordlys</label>
+      <input type="range" id="aslider" class="slider" min="0" max="${doc.weather.length-1}" step="1" value="0">
+      <div class="ends"><span>${fmtT.format(d(doc.weather[0].t))}</span><span>${fmtT.format(d(doc.weather[doc.weather.length-1].t))}</span></div>`:""}
+      <p class="note">Træna ligger under nordlysbeltet, så nordlys kan sees selv ved lav aktivitet (Kp 1–2). Det avgjørende er som regel skyene. Kp-varselet fra NOAA gjelder tre døgn fram. Lenger fram vurderes bare sikten.</p>
+    </section>
+  </div>`;
+  levelsList(L);
+  setupScrub(doc);
+  setupAurora(doc);
+  $("meta").textContent=`Oppdatert ${fmtT.format(d(doc.updated))} · ${doc.station||"Træna"}`;
+}
+
+let lastUpdated=null;
+async function load(){
+  try{
+    const r=await fetch("data.json?v="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const doc=await r.json();
+    if(doc.updated!==lastUpdated){ lastUpdated=doc.updated; render(doc); }
+    const age=(Date.now()-d(doc.updated))/3600e3;
+    $("meta").textContent=`Oppdatert ${fmtT.format(d(doc.updated))} · ${doc.station||"Træna"}`+(age>3?` · data er ${Math.round(age)} timer gamle`:"");
+  }catch(e){
+    if(!lastUpdated) $("app").innerHTML=`<div class="panel empty">Klarte ikke å hente data akkurat nå. Last inn siden på nytt om litt.</div>`;
+  }
+}
+load();
+setInterval(load,10*60e3);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) load(); });
+</script>
+
+</body>
+</html>
