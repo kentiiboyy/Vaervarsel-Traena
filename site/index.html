@@ -3,11 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Værvarsel Træna</title>
 <meta name="description" content="Vær, flo og fjære, stormflo, bølger og nordlys for Træna.">
 <meta name="theme-color" content="#0d6672">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 20c4-4 8-4 12 0s8 4 12 0 4-2 4-2v12H2Z' fill='%230d6672'/%3E%3Ccircle cx='22' cy='9' r='5' fill='%23e0a21b'/%3E%3C/svg%3E">
-<style>body{margin:0}</style>
+<title>Værvarsel Træna</title>
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -52,7 +54,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:.
 .s2{--c:var(--high);--cbg:var(--high-bg)} .s3,.s4{--c:var(--crit);--cbg:var(--crit-bg)}
 .lead{font-size:1.02rem;margin:0}
 .chart{width:100%;overflow-x:auto}
-.chart svg{display:block;width:100%;min-width:560px;height:auto;touch-action:pan-y;cursor:crosshair}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair}
 svg text{font-family:var(--mono);font-size:10px;fill:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted)}
 .legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--accent);vertical-align:middle;margin-right:6px}
@@ -122,6 +124,29 @@ tr.day td{font-family:var(--display);font-weight:600;font-size:1rem;letter-spaci
 .night dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:.88rem}
 .night dt{color:var(--muted)} .night dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
 .a0{--c:var(--cloud-dk)} .a1{--c:var(--warn)} .a2{--c:var(--aurora)} .a3{--c:var(--aurora)}
+.cols{display:flex;flex-direction:column;gap:20px}
+.col{display:contents}
+.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o0{order:0}
+@media (min-width:1100px){
+  .wrap{max-width:1400px}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:20px;min-width:0}
+  .full{grid-column:1/-1}
+  h1{font-size:2.8rem}
+}
+@media (max-width:600px){
+  .wrap{gap:14px;padding-block:14px 32px}
+  .cols{gap:14px}
+  .panel{padding:12px;gap:12px}
+  h1{font-size:1.9rem}
+  svg text{font-size:11.5px}
+  th,td{padding:6px 6px}
+  .hidem{display:none}
+  .lead{font-size:.98rem}
+  .rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wx{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .legend{font-size:.78rem}
+}
 @media (max-width:480px){
   .dayrow{grid-template-columns:minmax(52px,1fr) 34px minmax(72px,1fr) minmax(86px,1.2fr);}
   .dayrow .pr,.dayrow .gust{display:none}
@@ -130,17 +155,15 @@ tr.day td{font-family:var(--display);font-weight:600;font-size:1rem;letter-spaci
 }
 </style>
 
-</head>
-<body>
 <div class="wrap">
   <header>
     <h1>Værvarsel Træna</h1>
     <div class="meta" id="meta">Venter på data …</div>
   </header>
 
-  <div id="app"><div class="panel empty">Henter siste varsel for vær, flo og fjære, bølger og nordlys. Siden oppdateres hver time.</div></div>
+  <div id="app"><div class="panel empty">Henter siste varsel for vær, flo og fjære, bølger og nordlys. Data oppdateres automatisk hver time.</div></div>
 
-  <p class="note">Kilder: vær fra MET sitt punktvarsel for Træna (samme som på yr.no), varsler og ikke målinger. Vannstand og stormflo fra <a href="https://www.kartverket.no/til-sjos/se-havniva" target="_blank" rel="noopener">Kartverket (Se havnivå)</a> i samarbeid med MET. Bølger fra MET oceanforecast for et punkt like vest for Træna (åpent hav, så bølgene inne mellom holmene blir lavere). Nordlysaktivitet (Kp) fra <a href="https://www.swpc.noaa.gov/products/planetary-k-index" target="_blank" rel="noopener">NOAA SWPC</a>. Dette er et hjelpeverktøy, ikke et offisielt farevarsel. Sjekk alltid farevarsler på <a href="https://www.yr.no/nb/farevarsler" target="_blank" rel="noopener">yr.no</a>. Data: CC BY 4.0. Siden oppdateres hver time.</p>
+  <p class="note">Kilder: vær fra MET sitt punktvarsel for Træna (samme som på yr.no), varsler og ikke målinger. Vannstand og stormflo fra <a href="https://www.kartverket.no/til-sjos/se-havniva" target="_blank" rel="noopener">Kartverket (Se havnivå)</a> i samarbeid med MET. Bølger fra MET oceanforecast for et punkt like vest for Træna (åpent hav, så bølgene inne mellom holmene blir lavere). Nordlysaktivitet (Kp) fra <a href="https://www.swpc.noaa.gov/products/planetary-k-index" target="_blank" rel="noopener">NOAA SWPC</a>. Dette er et hjelpeverktøy, ikke et offisielt farevarsel. Sjekk alltid farevarsler på <a href="https://www.yr.no/nb/farevarsler" target="_blank" rel="noopener">yr.no</a>. Data: CC BY 4.0.</p>
 </div>
 
 <script>
@@ -279,12 +302,16 @@ function weatherNow(A){
 
 /* ---------- charts ---------- */
 const SC={};
+const MOB=()=>matchMedia("(max-width:600px)").matches, WIDE=()=>matchMedia("(min-width:1100px)").matches;
+function geo(kind){ if(MOB()) return {w:400,ml:32,mr:8}; if(kind==="aurora"&&WIDE()) return {w:1240,ml:44,mr:96}; return {w:760,ml:44,mr:96}; }
+// threshold label: right margin on large screens, inside the plot above the line on phones
+function thLabel(w,mr,y,c,txt){ return MOB()?`<text x="${w-mr-2}" y="${y-4}" text-anchor="end" style="fill:${c}">${txt}</text>`:`<text x="${w-mr+6}" y="${y+3}" style="fill:${c}">${txt}</text>`; }
 let selT=null;
 function dayTicks(arr,X,mt,h,mb){ let s=""; for(const r of arr){ if(+fmtH.format(d(r.t))===0){const x=X(r.t); s+=`<line x1="${x}" x2="${x}" y1="${mt}" y2="${h-mb}" stroke="var(--rule)"/><text x="${x+4}" y="${h-mb+14}">${fmtD.format(d(r.t))}</text>`;} } return s; }
 function nowLine(X,t0,t1,mt,h,mb,ly){ const now=new Date(); if(now>t0&&now<t1){const x=X(now.toISOString()); return `<line x1="${x}" x2="${x}" y1="${mt}" y2="${h-mb}" stroke="var(--fg)" stroke-width="1"/><text x="${x+4}" y="${ly}" style="fill:var(--fg)">nå</text>`;} return ""; }
 
 function chartWater(doc){
-  const L=doc.levels, W=doc.water, w=760, h=300, ml=44, mr=96, mt=12, mb=34;
+  const L=doc.levels, W=doc.water, {w,ml,mr}=geo(), h=MOB()?280:300, mt=12, mb=34;
   const t0=d(W[0].t), t1=d(W[W.length-1].t);
   const vals=W.flatMap(r=>[r.fc,r.pre,r.obs??r.fc]);
   const lo=Math.floor((Math.min(...vals)-20)/50)*50, hi=Math.max(L.Y20+15, Math.max(...vals)+20);
@@ -293,7 +320,8 @@ function chartWater(doc){
   for(let v=Math.ceil(lo/50)*50; v<=hi; v+=50){ s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="1"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end">${v}</text>`; }
   s+=dayTicks(W,X,mt,h,mb);
   const th=[["MHW","Middel høyvann","var(--tide)"],["HAT","Høyeste tidevann","var(--warn)"],["Y1","Årlig stormflo","var(--high)"],["Y5","5-års","var(--crit)"],["Y20","20-års","var(--crit)"]];
-  for(const [k,n,c] of th){ if(L[k]>hi||L[k]<lo) continue; const y=Y(L[k]); s+=`<line x1="${ml}" x2="${w-mr}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.2" stroke-dasharray="${k==="MHW"?"2 4":"6 4"}"/><text x="${w-mr+6}" y="${y+3}" style="fill:${c}">${n} ${L[k].toFixed(0)}</text>`; }
+  let lastLy=Infinity;
+  for(const [k,n,c] of th){ if(L[k]>hi||L[k]<lo) continue; const y=Y(L[k]); const room=!MOB()||lastLy-y>=14; if(room) lastLy=y; s+=`<line x1="${ml}" x2="${w-mr}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.2" stroke-dasharray="${k==="MHW"?"2 4":"6 4"}"/>${room?thLabel(w,mr,y,c,`${n} ${L[k].toFixed(0)}`):""}`; }
   const line=(key,attrs)=>`<path d="${W.map((r,i)=>`${i?"L":"M"}${X(r.t).toFixed(1)},${Y(r[key]).toFixed(1)}`).join("")}" fill="none" ${attrs}/>`;
   s+=`<path d="M${X(W[0].t)},${Y(lo)}${W.map(r=>`L${X(r.t).toFixed(1)},${Y(r.fc).toFixed(1)}`).join("")}L${X(W[W.length-1].t)},${Y(lo)}Z" fill="var(--accent)" opacity=".10"/>`;
   s+=line("pre",`stroke="var(--tide)" stroke-width="1.6" stroke-dasharray="5 4"`)+line("fc",`stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"`);
@@ -306,12 +334,12 @@ function chartWater(doc){
 }
 function chartWaves(doc){
   const V=doc.waves; if(!V||!V.length) return `<p class="note">Ingen bølgedata.</p>`;
-  const w=760,h=200,ml=44,mr=96,mt=10,mb=30, t0=d(V[0].t), t1=d(V[V.length-1].t);
+  const {w,ml,mr}=geo(),h=200,mt=10,mb=30, t0=d(V[0].t), t1=d(V[V.length-1].t);
   const hi=Math.max(9,Math.ceil(Math.max(...V.map(v=>v.hs))+1));
   const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr), Y=v=>mt+(hi-v)/hi*(h-mt-mb);
   let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Bølgevarsel vest for Træna">`;
   for(let v=0;v<=hi;v+=2) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end">${v} m</text>`;
-  for(const [v,n,c] of [[4,"Grov sjø","var(--warn)"],[6,"Svært grov","var(--high)"],[8,"Høy sjø","var(--crit)"]]) if(v<=hi) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/><text x="${w-mr+6}" y="${Y(v)+3}" style="fill:${c}">${n} ${v} m</text>`;
+  for(const [v,n,c] of [[4,"Grov sjø","var(--warn)"],[6,"Svært grov","var(--high)"],[8,"Høy sjø","var(--crit)"]]) if(v<=hi) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/>${thLabel(w,mr,Y(v),c,`${n} ${v} m`)}`;
   s+=dayTicks(V,X,mt,h,mb);
   const bw=Math.max(2,(w-ml-mr)/V.length-1);
   for(const r of V){ const c=["var(--tide)","var(--warn)","var(--high)","var(--crit)"][waveStatus(r.hs)]; s+=`<rect x="${(X(r.t)-bw/2).toFixed(1)}" y="${Y(r.hs).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(0)-Y(r.hs)).toFixed(1)}" fill="${c}" opacity=".85"/>`; }
@@ -321,17 +349,17 @@ function chartWaves(doc){
 }
 function chartWind(doc){
   const A=doc.weather; if(!A||!A.length) return `<p class="note">Vinddata kommer ved neste oppdatering.</p>`;
-  const w=760,h=220,ml=44,mr=96,mt=10,mb=30, t0=d(A[0].t), t1=d(A[A.length-1].t);
+  const {w,ml,mr}=geo(),h=220,mt=10,mb=30, t0=d(A[0].t), t1=d(A[A.length-1].t);
   const hi=Math.max(24,Math.ceil((Math.max(...A.map(r=>r.wg??r.ws))+3)/4)*4);
   const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr), Y=v=>mt+(hi-v)/hi*(h-mt-mb);
   let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Vindvarsel for Træna">`;
   for(let v=0;v<=hi;v+=4) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end">${v}</text>`;
-  for(const [v,n,c] of [[10.8,"Kuling","var(--warn)"],[17.2,"St. kuling","var(--high)"],[20.8,"Storm","var(--crit)"]]) if(v<=hi) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/><text x="${w-mr+6}" y="${Y(v)+3}" style="fill:${c}">${n} ${nb(v)}</text>`;
+  for(const [v,n,c] of [[10.8,"Kuling","var(--warn)"],[17.2,"St. kuling","var(--high)"],[20.8,"Storm","var(--crit)"]]) if(v<=hi) s+=`<line x1="${ml}" x2="${w-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-dasharray="6 4"/>${thLabel(w,mr,Y(v),c,`${n} ${nb(v)}`)}`;
   s+=dayTicks(A,X,mt,h,mb);
   const G=A.filter(r=>r.wg!=null);
   if(G.length) s+=`<path d="M${X(G[0].t).toFixed(1)},${Y(0)}${G.map(r=>`L${X(r.t).toFixed(1)},${Y(r.wg).toFixed(1)}`).join("")}L${X(G[G.length-1].t).toFixed(1)},${Y(0)}Z" fill="var(--gust)" opacity=".22"/>`;
   s+=`<path d="${A.map((r,i)=>`${i?"L":"M"}${X(r.t).toFixed(1)},${Y(r.ws).toFixed(1)}`).join("")}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
-  A.forEach((r,i)=>{ if(i%3) return; s+=`<g transform="translate(${X(r.t).toFixed(1)},${h-mb-10}) rotate(${(r.wd+180)%360})"><path d="M0,-6 L3.5,4 L0,2 L-3.5,4 Z" fill="var(--muted)"/></g>`; });
+  const step=MOB()?6:3; A.forEach((r,i)=>{ if(i%step) return; s+=`<g transform="translate(${X(r.t).toFixed(1)},${h-mb-10}) rotate(${(r.wd+180)%360})"><path d="M0,-6 L3.5,4 L0,2 L-3.5,4 Z" fill="var(--muted)"/></g>`; });
   s+=nowLine(X,t0,t1,mt,h,mb,h-mb-22);
   s+=`<text x="${ml-6}" y="${mt-1}" text-anchor="end">m/s</text>`;
   s+=`<g class="cur" id="cn"><line id="cnl" y1="${mt}" y2="${h-mb}"/><circle id="cng" r="3.5" class="gdot"/><circle id="cnd" r="5"/><rect id="cnb" height="18" rx="3"/><text id="cnx" text-anchor="middle"></text></g>`;
@@ -356,14 +384,14 @@ function tideTable(doc){
   let lastDay="", rows="";
   for(const r of ex){
     const k=fmtKey.format(d(r.t));
-    if(k!==lastDay){ lastDay=k; rows+=`<tr class="day"><td colspan="6">${cap(fmtWd.format(d(r.t)))} ${fmtDM.format(d(r.t))}</td></tr>`; }
+    if(k!==lastDay){ lastDay=k; rows+=`<tr class="day"><td colspan="${MOB()?4:6}">${cap(fmtWd.format(d(r.t)))} ${fmtDM.format(d(r.t))}</td></tr>`; }
     const sg=r.fc-r.pre, v=nearestWave(V,r.t), a=nearestIn(A,r.t,1);
     let ass="";
     if(r.kind==="hi"){ const st=waterStatus(r.fc,L), vst=v?waveStatus(v.hs):0; ass=sx(st,NAMES[st])+(v&&vst>0?" "+sx(vst,WAVE_NAMES[vst]):""); }
-    rows+=`<tr><td><span class="kind${r.kind==="lo"?" lo":""}">${r.kind==="hi"?"Flo":"Fjære"}</span></td><td class="n">${fmtClock.format(d(r.t))}</td><td class="n">${r.fc.toFixed(0)}</td><td class="n">${sg>0?"+":""}${sg.toFixed(0)}</td><td class="n">${v?nb(v.hs)+" m":"–"}</td><td>${ass}</td></tr>`;
+    rows+=`<tr><td><span class="kind${r.kind==="lo"?" lo":""}">${r.kind==="hi"?"Flo":"Fjære"}</span></td><td class="n">${fmtClock.format(d(r.t))}</td><td class="n">${r.fc.toFixed(0)}</td><td class="n hidem">${sg>0?"+":""}${sg.toFixed(0)}</td><td class="n hidem">${v?nb(v.hs)+" m":"–"}</td><td>${ass}</td></tr>`;
   }
   return `<div class="tblwrap"><table>
-    <thead><tr><th></th><th class="n">Kl.</th><th class="n">cm</th><th class="n">Vær</th><th class="n">Bølger</th><th>Vurdering</th></tr></thead>
+    <thead><tr><th></th><th class="n">Kl.</th><th class="n">cm</th><th class="n hidem">Vær</th><th class="n hidem">Bølger</th><th>Vurdering</th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
@@ -421,7 +449,7 @@ function nightCards(nights){
 }
 function chartAurora(doc){
   const A=doc.weather||[], K=doc.kp||[]; if(!A.length) return "";
-  const w=760,h=210,ml=44,mr=96,mt=10,mb=30, t0=d(A[0].t), t1=d(A[A.length-1].t);
+  const {w,ml,mr}=geo("aurora"),h=210,mt=10,mb=30, t0=d(A[0].t), t1=d(A[A.length-1].t);
   const X=t=>ml+(d(t)-t0)/(t1-t0)*(w-ml-mr);
   const kTop=mt, kBot=mt+64, cTop=kBot+18, cBot=h-mb;
   const YK=v=>kBot-(v/9)*(kBot-kTop), YC=v=>cBot-(v/100)*(cBot-cTop);
@@ -432,13 +460,13 @@ function chartAurora(doc){
   s+=dayTicks(A,X,mt,h,mb);
   // kp rows
   for(const v of [0,3,6,9]) s+=`<line x1="${ml}" x2="${w-mr}" y1="${YK(v)}" y2="${YK(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${YK(v)+3}" text-anchor="end">${v}</text>`;
-  s+=`<text x="${w-mr+6}" y="${kTop+12}" style="fill:var(--kp)">Kp</text><text x="${w-mr+6}" y="${kTop+26}">aktivitet</text>`;
+  s+=MOB()?`<text x="${w-mr-2}" y="${kTop+10}" text-anchor="end" style="fill:var(--kp)">Kp</text>`:`<text x="${w-mr+6}" y="${kTop+12}" style="fill:var(--kp)">Kp</text><text x="${w-mr+6}" y="${kTop+26}">aktivitet</text>`;
   for(const k of K){ const a=d(k.t), b=new Date(+a+3*3600e3); if(b<=t0||a>=t1) continue;
     const x0=X(a<t0?t0.toISOString():k.t), x1=X(b>t1?t1.toISOString():b.toISOString());
     s+=`<rect x="${(x0+1).toFixed(1)}" y="${YK(k.kp).toFixed(1)}" width="${Math.max(1,x1-x0-2).toFixed(1)}" height="${(kBot-YK(k.kp)).toFixed(1)}" fill="var(--kp)" opacity="${k.k==="predicted"?.6:.95}"/>`; }
   // clouds
   for(const v of [0,50,100]) s+=`<line x1="${ml}" x2="${w-mr}" y1="${YC(v)}" y2="${YC(v)}" stroke="var(--rule)"/><text x="${ml-6}" y="${YC(v)+3}" text-anchor="end">${v}%</text>`;
-  s+=`<text x="${w-mr+6}" y="${cTop+12}">Skydekke</text>`;
+  s+=MOB()?`<text x="${w-mr-2}" y="${cTop+10}" text-anchor="end">Skydekke</text>`:`<text x="${w-mr+6}" y="${cTop+12}">Skydekke</text>`;
   const C=A.filter(r=>r.cl!=null);
   if(C.length) s+=`<path d="M${X(C[0].t).toFixed(1)},${YC(0)}${C.map(r=>`L${X(r.t).toFixed(1)},${YC(r.cl).toFixed(1)}`).join("")}L${X(C[C.length-1].t).toFixed(1)},${YC(0)}Z" fill="var(--cloud)" opacity=".9"/>`;
   s+=nowLine(X,t0,t1,mt,h,mb,h-mb-6);
@@ -585,9 +613,10 @@ function render(doc){
   const tonight=nights[0];
 
   $("app").innerHTML=`
-  <div style="display:flex;flex-direction:column;gap:20px">
-    ${banner}
-    <section class="panel">
+  <div class="cols">
+    ${banner?`<div class="full o0">${banner}</div>`:""}
+    <div class="col">
+    <section class="panel o1">
       <div class="sec-head"><h2>Været på Træna</h2><a class="lnk note" href="https://www.windy.com/66.500/12.100?66.500,12.100,9" target="_blank" rel="noopener">Se kartet på Windy</a></div>
       ${weatherNow(A)}
       <h3>Sju dager</h3>
@@ -597,7 +626,15 @@ function render(doc){
       <div class="legend"><span><i></i>Middelvind</span><span><i class="g"></i>Vindkast</span><span>Pilene viser hvor vinden blåser mot</span></div>
     </section>
 
-    <section class="panel">
+    <section class="panel o4">
+      <div class="sec-head"><h2>Bølger</h2>${sx(vs,WAVE_NAMES[vs])}</div>
+      <p class="lead">${mv?`Høyeste bølger ute: ${nb(mv.hs)} m fra ${dirName(mv.dir)} ${fmtT.format(d(mv.t))}.`:"Ingen bølgedata."}</p>
+      <div class="chart" id="chv">${chartWaves(doc)}</div>
+      <p class="note">Signifikant bølgehøyde på åpent hav vest for Træna. Linja følger tidspunktet du har valgt under flo og fjære.</p>
+    </section>
+    </div>
+    <div class="col">
+    <section class="panel o2">
       <div class="sec-head"><h2>Flo og fjære</h2>${sx(ws,"Vannstand: "+NAMES[ws].toLowerCase())}</div>
       <p class="lead">${tideLead}</p>
       ${tideTable(doc)}
@@ -610,20 +647,15 @@ function render(doc){
       <p class="note">«Vær» er hvor mye vind og lufttrykk løfter eller senker vannet i forhold til vanlig tidevann. Lavtrykk og pålandsvind løfter vannet, høytrykk senker det.</p>
     </section>
 
-    <section class="panel">
+    <section class="panel o3">
       <h2>Slik leses nivåene</h2>
       <p class="note">Alle høyder er i cm over sjøkartnull, samme nivå som tidevannstabellen. Grensene er hentet fra Kartverkets nivåer for målestasjonen på Træna.</p>
       <div class="levels" id="levels"></div>
     </section>
 
-    <section class="panel">
-      <div class="sec-head"><h2>Bølger</h2>${sx(vs,WAVE_NAMES[vs])}</div>
-      <p class="lead">${mv?`Høyeste bølger ute: ${nb(mv.hs)} m fra ${dirName(mv.dir)} ${fmtT.format(d(mv.t))}.`:"Ingen bølgedata."}</p>
-      <div class="chart" id="chv">${chartWaves(doc)}</div>
-      <p class="note">Signifikant bølgehøyde på åpent hav vest for Træna. Linja følger tidspunktet du har valgt under flo og fjære.</p>
-    </section>
+    </div>
 
-    <section class="panel">
+    <section class="panel full o5">
       <div class="sec-head"><h2>Nordlys</h2>${tonight?`<span class="pill" style="--c:var(--aurora);--cbg:transparent;border:1px solid var(--aurora)">${tonight.key===fmtKey.format(new Date())?"I natt":"Neste natt"}: ${tonight.verdict.toLowerCase()}</span>`:""}</div>
       ${nightCards(nights)}
       <div class="chart" id="cha">${chartAurora(doc)}</div>
@@ -641,23 +673,23 @@ function render(doc){
   $("meta").textContent=`Oppdatert ${fmtT.format(d(doc.updated))} · ${doc.station||"Træna"}`;
 }
 
-let lastUpdated=null;
-async function load(){
-  try{
-    const r=await fetch("data.json?v="+Date.now(),{cache:"no-store"});
-    if(!r.ok) throw new Error(r.status);
-    const doc=await r.json();
-    if(doc.updated!==lastUpdated){ lastUpdated=doc.updated; render(doc); }
-    const age=(Date.now()-d(doc.updated))/3600e3;
-    $("meta").textContent=`Oppdatert ${fmtT.format(d(doc.updated))} · ${doc.station||"Træna"}`+(age>3?` · data er ${Math.round(age)} timer gamle`:"");
-  }catch(e){
-    if(!lastUpdated) $("app").innerHTML=`<div class="panel empty">Klarte ikke å hente data akkurat nå. Last inn siden på nytt om litt.</div>`;
+(()=>{
+  let last=null, lastStamp=null;
+  for(const q of ["(max-width:600px)","(min-width:1100px)"]) matchMedia(q).addEventListener("change",()=>{ if(last) render(last); });
+  async function load(){
+    try{
+      const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"});
+      if(!r.ok) throw new Error(r.status);
+      const doc=await r.json();
+      if(doc.updated!==lastStamp){ lastStamp=doc.updated; last=doc; render(doc); }
+    }catch(e){
+      if(!last) $("app").innerHTML=`<div class="panel empty">Klarte ikke å hente data akkurat nå. Last inn siden på nytt om litt.</div>`;
+    }
   }
-}
-load();
-setInterval(load,10*60e3);
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) load(); });
+  load();
+  setInterval(load,10*60e3);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) load(); });
+})();
 </script>
-
 </body>
 </html>
